@@ -5,16 +5,16 @@ import { ReportStatus } from "@prisma/client";
 
 const VALID_STATUSES = new Set<string>(["PENDING", "IN_PROGRESS", "RESOLVED"]);
 
-type Context = { params: Promise<{ id: string }> };
-
-export async function GET(_req: NextRequest, context: Context) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(_req: NextRequest, context: any) {
   const { id } = await context.params;
   const report = await prisma.report.findUnique({ where: { id } });
   if (!report) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(report);
 }
 
-export async function PATCH(req: NextRequest, context: Context) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function PATCH(req: NextRequest, context: any) {
   const { id } = await context.params;
   const authUser = await getAuthUser(req);
   if (!authUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

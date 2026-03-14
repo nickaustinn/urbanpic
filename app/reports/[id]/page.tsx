@@ -15,9 +15,8 @@ const ISSUE_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
-type Props = { params: Promise<{ id: string }> };
-
-export default async function ReportDetailPage({ params }: Props) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default async function ReportDetailPage({ params }: any) {
   const { id } = await params;
   const report = await prisma.report.findUnique({ where: { id } });
   if (!report) notFound();
