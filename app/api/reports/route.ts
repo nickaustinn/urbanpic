@@ -55,20 +55,24 @@ export async function POST(req: NextRequest) {
 
   const authUser = await getAuthUser(req);
 
-  const report = await prisma.report.create({
-    data: {
-      imageUrl,
-      issueType,
-      severity: severity ?? "MEDIUM",
-      description,
-      department: department ?? "City Services 311",
-      latitude,
-      longitude,
-      address: address ?? null,
-      aiRaw: aiRaw ?? undefined,
-      userId: authUser?.userId ?? null,
-    },
-  });
-
-  return NextResponse.json(report, { status: 201 });
+  try {
+    const report = await prisma.report.create({
+      data: {
+        imageUrl,
+        issueType,
+        severity: severity ?? "MEDIUM",
+        description,
+        department: department ?? "City Services 311",
+        latitude,
+        longitude,
+        address: address ?? null,
+        aiRaw: aiRaw ?? undefined,
+        userId: authUser?.userId ?? null,
+      },
+    });
+    return NextResponse.json(report, { status: 201 });
+  } catch (err) {
+    console.error("[POST /api/reports]", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
 }
