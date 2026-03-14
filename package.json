@@ -17,6 +17,7 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@mapbox/mapbox-gl-geocoder": "^5.0.3",
     "@prisma/client": "^6.5.0",
+    "autoprefixer": "^10.4.27",
     "bcryptjs": "^2.4.3",
     "jose": "^5.10.0",
     "mapbox-gl": "^3.10.0",
