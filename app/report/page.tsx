@@ -58,14 +58,8 @@ export default function ReportPage() {
     setImageBase64(base64);
     setStep("analyzing");
 
-    // Upload file
-    const form = new FormData();
-    form.append("file", file);
-    const uploadRes = await fetch("/api/upload", { method: "POST", body: form });
-    if (uploadRes.ok) {
-      const { imageUrl: url } = await uploadRes.json();
-      setImageUrl(url);
-    }
+    // Use base64 as the image URL directly (Vercel has a read-only filesystem)
+    setImageUrl(base64);
 
     // Classify with Claude
     const classifyRes = await fetch("/api/classify", {
