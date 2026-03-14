@@ -3,11 +3,11 @@ import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["localhost"],
+    remotePatterns: [
+      { protocol: "http", hostname: "localhost" },
+    ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ["@prisma/client"],
-  },
+  serverExternalPackages: ["@prisma/client"],
 };
 
 export default withPWA({
