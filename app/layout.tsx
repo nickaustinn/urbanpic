@@ -9,6 +9,15 @@ export const metadata: Metadata = {
   title: "UrbanPic — AI-Powered 311 Reporter",
   description:
     "Snap a photo of a city issue. AI classifies it, writes the report, and routes it to the right department.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "UrbanPic",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
