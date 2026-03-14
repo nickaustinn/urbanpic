@@ -6,8 +6,22 @@ interface PhotoUploadProps {
   onFileSelect: (file: File, preview: string) => void;
 }
 
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+const ACCEPTED_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
 const MAX_MB = 10;
+
+function isImageFile(file: File): boolean {
+  // Accept if MIME type starts with image/ (covers Android's image/jpeg, image/*, etc.)
+  if (file.type.startsWith("image/")) return true;
+  // Accept if MIME type is in our known list
+  if (ACCEPTED_TYPES.includes(file.type)) return true;
+  // Accept if MIME type is empty but extension looks like an image (some Android devices)
+  if (!file.type) {
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    return ACCEPTED_EXTS.includes(ext);
+  }
+  return false;
+}
 
 export default function PhotoUpload({ onFileSelect }: PhotoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -15,8 +29,8 @@ export default function PhotoUpload({ onFileSelect }: PhotoUploadProps) {
   const [error, setError] = useState<string | null>(null);
 
   const validate = (file: File): string | null => {
-    if (!ACCEPTED.includes(file.type) && !file.name.toLowerCase().endsWith(".heic")) {
-      return "Unsupported format. Please use JPEG, PNG, WebP, or HEIC.";
+    if (!isImageFile(file)) {
+      return "Unsupported format. Please use JPEG, PNG, or WebP.";
     }
     if (file.size > MAX_MB * 1024 * 1024) {
       return `File too large. Maximum size is ${MAX_MB}MB.`;
@@ -71,8 +85,8 @@ export default function PhotoUpload({ onFileSelect }: PhotoUploadProps) {
         <p className="text-gray-400 text-sm">JPEG, PNG, WebP, HEIC · max 10MB</p>
       </div>
 
-      {/* Mobile camera button */}
-      <div className="mt-3 sm:hidden">
+      {/* Camera button — shown on any touch device (phones + tablets, iOS + Android) */}
+      <div className="mt-3 touch-device-only">
         <label className="flex items-center justify-center gap-2 w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl cursor-pointer transition-colors">
           <span>📸</span> Take Photo
           <input
@@ -89,7 +103,7 @@ export default function PhotoUpload({ onFileSelect }: PhotoUploadProps) {
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPTED.join(",")}
+        accept={ACCEPTED_TYPES.join(",")}
         className="sr-only"
         onChange={handleChange}
         aria-label="Upload photo"

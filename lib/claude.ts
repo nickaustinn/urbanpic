@@ -36,9 +36,16 @@ Analyze the provided image and respond with a JSON object containing:
 Respond only with valid JSON. Do not include any explanation outside the JSON.`;
 
 export async function classifyImage(imageBase64: string): Promise<ClassifyResult> {
-  // Strip the data URL prefix if present
+  // Strip the data URL prefix if present and detect media type from the prefix
+  const mimeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
+  const detectedMime = mimeMatch?.[1] ?? "image/jpeg";
+  // Normalise — some Android devices emit image/jpg instead of image/jpeg
+  const mediaType = (detectedMime === "image/jpg" ? "image/jpeg" : detectedMime) as
+    | "image/jpeg"
+    | "image/png"
+    | "image/gif"
+    | "image/webp";
   const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-  const mediaType = imageBase64.startsWith("data:image/png") ? "image/png" : "image/jpeg";
 
   const response = await client.messages.create({
     model: "claude-opus-4-6",

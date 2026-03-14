@@ -12,3 +12,14 @@
     @apply bg-white text-gray-900 antialiased;
   }
 }
+
+/* Show only on touch devices (phones + tablets, iOS + Android) regardless of screen width */
+.touch-device-only {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .touch-device-only {
+    display: block;
+  }
+}
