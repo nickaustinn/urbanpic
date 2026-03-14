@@ -15,7 +15,9 @@ const ISSUE_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
-export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
+type Props = { params: Promise<{ id: string }> };
+
+export default async function ReportDetailPage({ params }: Props) {
   const { id } = await params;
   const report = await prisma.report.findUnique({ where: { id } });
   if (!report) notFound();
@@ -55,7 +57,8 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
       )}
 
       <p className="text-xs text-gray-400 mt-2">
-        Submitted {new Date(report.createdAt).toLocaleDateString("en-US", {
+        Submitted{" "}
+        {new Date(report.createdAt).toLocaleDateString("en-US", {
           year: "numeric",
           month: "long",
           day: "numeric",

@@ -5,21 +5,26 @@ import { ReportStatus } from "@prisma/client";
 
 const VALID_STATUSES = new Set<string>(["PENDING", "IN_PROGRESS", "RESOLVED"]);
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+type Context = { params: Promise<{ id: string }> };
+
+export async function GET(_req: NextRequest, context: Context) {
+  const { id } = await context.params;
   const report = await prisma.report.findUnique({ where: { id } });
   if (!report) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(report);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function PATCH(req: NextRequest, context: Context) {
+  const { id } = await context.params;
   const authUser = await getAuthUser(req);
   if (!authUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
   if (!body?.status || !VALID_STATUSES.has(body.status)) {
-    return NextResponse.json({ error: "Valid status required: PENDING | IN_PROGRESS | RESOLVED" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Valid status required: PENDING | IN_PROGRESS | RESOLVED" },
+      { status: 400 }
+    );
   }
 
   const existing = await prisma.report.findUnique({ where: { id } });
