@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  reports      Report[]
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id])
+  imageUrl    String
+  issueType   IssueType
+  severity    Severity     @default(MEDIUM)
+  description String
+  department  String
+  latitude    Float
+  longitude   Float
+  address     String?
+  status      ReportStatus @default(PENDING)
+  aiRaw       Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([issueType])
+  @@index([status])
+  @@index([userId])
+  @@index([latitude, longitude])
+  @@index([createdAt])
+}
+
+enum IssueType {
+  POTHOLE
+  GRAFFITI
+  BROKEN_STREETLIGHT
+  ILLEGAL_DUMPING
+  ABANDONED_VEHICLE
+  DAMAGED_SIDEWALK
+  FLOODING
+  OTHER
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ReportStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+}

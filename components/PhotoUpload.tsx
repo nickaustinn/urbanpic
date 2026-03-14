@@ -1,0 +1,105 @@
+"use client";
+
+import { useRef, useState, useCallback } from "react";
+
+interface PhotoUploadProps {
+  onFileSelect: (file: File, preview: string) => void;
+}
+
+const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+const MAX_MB = 10;
+
+export default function PhotoUpload({ onFileSelect }: PhotoUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validate = (file: File): string | null => {
+    if (!ACCEPTED.includes(file.type) && !file.name.toLowerCase().endsWith(".heic")) {
+      return "Unsupported format. Please use JPEG, PNG, WebP, or HEIC.";
+    }
+    if (file.size > MAX_MB * 1024 * 1024) {
+      return `File too large. Maximum size is ${MAX_MB}MB.`;
+    }
+    return null;
+  };
+
+  const processFile = useCallback(
+    (file: File) => {
+      const err = validate(file);
+      if (err) {
+        setError(err);
+        return;
+      }
+      setError(null);
+      const reader = new FileReader();
+      reader.onloadend = () => onFileSelect(file, reader.result as string);
+      reader.readAsDataURL(file);
+    },
+    [onFileSelect]
+  );
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  };
+
+  return (
+    <div className="w-full">
+      {/* Desktop drag-and-drop zone */}
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        className={`
+          relative flex flex-col items-center justify-center gap-3 p-10 rounded-2xl border-2 border-dashed cursor-pointer transition-colors
+          ${dragOver ? "border-brand-500 bg-brand-50" : "border-gray-200 bg-gray-50 hover:border-brand-400 hover:bg-brand-50"}
+        `}
+      >
+        <span className="text-4xl">📷</span>
+        <p className="text-gray-700 font-medium">
+          Drag & drop a photo here, or <span className="text-brand-600">browse</span>
+        </p>
+        <p className="text-gray-400 text-sm">JPEG, PNG, WebP, HEIC · max 10MB</p>
+      </div>
+
+      {/* Mobile camera button */}
+      <div className="mt-3 sm:hidden">
+        <label className="flex items-center justify-center gap-2 w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl cursor-pointer transition-colors">
+          <span>📸</span> Take Photo
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+
+      {/* Hidden file input for click-to-browse */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED.join(",")}
+        className="sr-only"
+        onChange={handleChange}
+        aria-label="Upload photo"
+      />
+
+      {error && (
+        <p className="mt-2 text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
