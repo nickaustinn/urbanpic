@@ -5,13 +5,15 @@ import { ReportStatus } from "@prisma/client";
 
 const VALID_STATUSES = new Set<string>(["PENDING", "IN_PROGRESS", "RESOLVED"]);
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const report = await prisma.report.findUnique({ where: { id: params.id } });
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const report = await prisma.report.findUnique({ where: { id } });
   if (!report) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(report);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const authUser = await getAuthUser(req);
   if (!authUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -20,14 +22,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Valid status required: PENDING | IN_PROGRESS | RESOLVED" }, { status: 400 });
   }
 
-  const existing = await prisma.report.findUnique({ where: { id: params.id } });
+  const existing = await prisma.report.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (existing.userId !== authUser.userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const updated = await prisma.report.update({
-    where: { id: params.id },
+    where: { id },
     data: { status: body.status as ReportStatus },
   });
 

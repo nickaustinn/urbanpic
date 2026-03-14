@@ -15,8 +15,9 @@ const ISSUE_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
-export default async function ReportDetailPage({ params }: { params: { id: string } }) {
-  const report = await prisma.report.findUnique({ where: { id: params.id } });
+export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const report = await prisma.report.findUnique({ where: { id } });
   if (!report) notFound();
 
   return (
