@@ -6,8 +6,15 @@ import DepartmentBadge from "@/components/DepartmentBadge";
 import Link from "next/link";
 import { getDepartment } from "@/lib/routing";
 import { IssueType } from "@/lib/types";
+import { getSRType } from "@/lib/sjc311";
 
-type Step = "upload" | "review" | "success";
+type Step = "upload" | "review" | "preview" | "success";
+
+const STEPS: { key: Step; label: string }[] = [
+  { key: "upload", label: "Upload" },
+  { key: "review", label: "Details" },
+  { key: "preview", label: "Preview" },
+];
 
 const ISSUE_TYPES: IssueType[] = [
   "POTHOLE",
@@ -40,10 +47,11 @@ export default function ReportPage() {
   const [issueType, setIssueType] = useState<IssueType>("POTHOLE");
   const [severity, setSeverity] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
   const [description, setDescription] = useState("");
-  const [latitude, setLatitude] = useState<number>(37.7749);
-  const [longitude, setLongitude] = useState<number>(-122.4194);
-  const [reportId, setReportId] = useState<string | null>(null);
+  const [latitude, setLatitude] = useState<number>(37.9577);
+  const [longitude, setLongitude] = useState<number>(-121.2908);
+  const [srNumber, setSrNumber] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleFileSelect = useCallback((file: File, base64: string) => {
     setPreview(base64);
@@ -62,34 +70,42 @@ export default function ReportPage() {
     setStep("review");
   }, []);
 
-  const handleSubmit = async () => {
+  const handleGoToPreview = () => {
     setSubmitError(null);
+    setStep("preview");
+  };
+
+  const handleSubmitTo311 = async () => {
+    setSubmitError(null);
+    setSubmitting(true);
     try {
-      const res = await fetch("/api/reports", {
+      const srType = getSRType(issueType);
+
+      const res = await fetch("/api/submit-311", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageUrl: imageUrl ?? "/uploads/placeholder.jpg",
-          issueType,
-          severity,
+          srTypeId: srType.id,
           description,
-          department: getDepartment(issueType),
           latitude,
           longitude,
+          imageBase64: imageUrl,
         }),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setSubmitError(`Submission failed (${res.status}): ${body.error ?? "Unknown error"}`);
+        setSubmitError(`Submission failed: ${body.error ?? "Unknown error"}`);
         return;
       }
 
-      const report = await res.json();
-      setReportId(report.id);
+      const result = await res.json();
+      setSrNumber(result.SRNumber ?? null);
       setStep("success");
     } catch (err) {
       setSubmitError(`Network error: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -100,26 +116,29 @@ export default function ReportPage() {
     setIssueType("POTHOLE");
     setSeverity("MEDIUM");
     setDescription("");
-    setReportId(null);
+    setSrNumber(null);
     setSubmitError(null);
+    setSubmitting(false);
   };
+
+  const stepIndex = STEPS.findIndex((s) => s.key === step);
 
   return (
     <div className="max-w-xl mx-auto px-4 py-10">
       {step !== "success" && (
         <div className="flex items-center gap-2 mb-8 text-sm text-gray-400">
-          {(["upload", "review"] as const).map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
+          {STEPS.map((s, i) => (
+            <div key={s.key} className="flex items-center gap-2">
               <span
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                  ${step === s ? "bg-brand-600 text-white" : i < ["upload", "review"].indexOf(step) ? "bg-brand-200 text-brand-700" : "bg-gray-100 text-gray-400"}`}
+                  ${step === s.key ? "bg-brand-600 text-white" : i < stepIndex ? "bg-brand-200 text-brand-700" : "bg-gray-100 text-gray-400"}`}
               >
                 {i + 1}
               </span>
-              <span className={step === s ? "text-gray-900 font-medium" : ""}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
+              <span className={step === s.key ? "text-gray-900 font-medium" : ""}>
+                {s.label}
               </span>
-              {i < 1 && <span className="text-gray-200">›</span>}
+              {i < STEPS.length - 1 && <span className="text-gray-200">&rsaquo;</span>}
             </div>
           ))}
         </div>
@@ -137,8 +156,8 @@ export default function ReportPage() {
       {/* Step 2: Review */}
       {step === "review" && (
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Review Your Report</h1>
-          <p className="text-gray-500 mb-6">Fill in the details before submitting.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Describe the Issue</h1>
+          <p className="text-gray-500 mb-6">Fill in the details before previewing your 311 report.</p>
 
           {preview && (
             <img src={preview} alt="Issue" className="w-full h-48 object-cover rounded-2xl mb-6 shadow-sm" />
@@ -200,14 +219,6 @@ export default function ReportPage() {
             <p className="text-xs text-gray-400 text-right mt-1">{description.length}/500</p>
           </div>
 
-          <p className="text-xs text-gray-400 mb-6">
-            📍 Location: {latitude.toFixed(5)}, {longitude.toFixed(5)}
-          </p>
-
-          {submitError && (
-            <p className="text-sm text-red-600 mb-4">{submitError}</p>
-          )}
-
           <div className="flex gap-3">
             <button
               onClick={reset}
@@ -216,28 +227,105 @@ export default function ReportPage() {
               Start Over
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={handleGoToPreview}
               disabled={!description.trim()}
               className="flex-1 py-3 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
             >
-              Submit Report
+              Preview 311 Report
             </button>
           </div>
         </div>
       )}
 
-      {/* Step 3: Success */}
+      {/* Step 3: Preview 311 Submission */}
+      {step === "preview" && (
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Preview 311 Report</h1>
+          <p className="text-gray-500 mb-6">
+            This is what will be submitted to San Joaquin County 311.
+          </p>
+
+          <div className="border border-gray-200 rounded-2xl overflow-hidden mb-6">
+            {/* Header */}
+            <div className="bg-gray-50 px-5 py-3 border-b border-gray-200">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                San Joaquin County &middot; NEXGEN 311 Service Request
+              </p>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Photo */}
+              {preview && (
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Attached Photo</p>
+                  <img src={preview} alt="Issue" className="w-full h-40 object-cover rounded-lg" />
+                </div>
+              )}
+
+              {/* Service Type */}
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-1">Service Type</p>
+                <p className="text-sm text-gray-900 font-medium">{getSRType(issueType).label}</p>
+              </div>
+
+              {/* Description */}
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-1">Description of Issue</p>
+                <p className="text-sm text-gray-900">{description}</p>
+              </div>
+
+              {/* Location */}
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-1">Location</p>
+                <p className="text-sm text-gray-900">
+                  {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                </p>
+              </div>
+
+              {/* Submission type */}
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-1">Submitted As</p>
+                <p className="text-sm text-gray-900">Anonymous</p>
+              </div>
+            </div>
+          </div>
+
+          {submitError && (
+            <p className="text-sm text-red-600 mb-4">{submitError}</p>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setStep("review")}
+              className="flex-1 py-3 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={handleSubmitTo311}
+              disabled={submitting}
+              className="flex-1 py-3 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
+            >
+              {submitting ? "Submitting..." : "Report Issue"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Success */}
       {step === "success" && (
         <div className="flex flex-col items-center text-center gap-4 py-10">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-4xl">✅</div>
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-4xl">
+            &#x2705;
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">Report Submitted!</h1>
           <p className="text-gray-500 text-sm">
-            Your report has been received and routed to{" "}
-            <span className="font-medium text-gray-900">{getDepartment(issueType)}</span>.
+            Your report has been submitted to{" "}
+            <span className="font-medium text-gray-900">San Joaquin County 311</span>.
           </p>
-          {reportId && (
+          {srNumber && (
             <p className="text-xs text-gray-400 font-mono bg-gray-50 px-3 py-1 rounded">
-              Report ID: {reportId}
+              SR Number: {srNumber}
             </p>
           )}
           <div className="flex flex-col sm:flex-row gap-3 mt-4 w-full">
