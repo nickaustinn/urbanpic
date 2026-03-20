@@ -64,29 +64,33 @@ export default function ReportPage() {
 
   const handleSubmit = async () => {
     setSubmitError(null);
-    const res = await fetch("/api/reports", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        imageUrl: imageUrl ?? "/uploads/placeholder.jpg",
-        issueType,
-        severity,
-        description,
-        department: getDepartment(issueType),
-        latitude,
-        longitude,
-      }),
-    });
+    try {
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: imageUrl ?? "/uploads/placeholder.jpg",
+          issueType,
+          severity,
+          description,
+          department: getDepartment(issueType),
+          latitude,
+          longitude,
+        }),
+      });
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setSubmitError(`Submission failed (${res.status}): ${body.error ?? "Unknown error"}`);
-      return;
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setSubmitError(`Submission failed (${res.status}): ${body.error ?? "Unknown error"}`);
+        return;
+      }
+
+      const report = await res.json();
+      setReportId(report.id);
+      setStep("success");
+    } catch (err) {
+      setSubmitError(`Network error: ${err instanceof Error ? err.message : String(err)}`);
     }
-
-    const report = await res.json();
-    setReportId(report.id);
-    setStep("success");
   };
 
   const reset = () => {
