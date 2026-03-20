@@ -79,7 +79,8 @@ export default function ReportPage() {
     });
 
     if (!res.ok) {
-      setSubmitError("Submission failed. Please try again.");
+      const body = await res.json().catch(() => ({}));
+      setSubmitError(`Submission failed (${res.status}): ${body.error ?? "Unknown error"}`);
       return;
     }
 
