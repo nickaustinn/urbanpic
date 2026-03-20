@@ -7,6 +7,7 @@ import Link from "next/link";
 import { getDepartment } from "@/lib/routing";
 import { IssueType } from "@/lib/types";
 import { getSRType } from "@/lib/sjc311";
+import Turnstile from "react-turnstile";
 
 type Step = "upload" | "review" | "preview" | "success";
 
@@ -50,8 +51,11 @@ export default function ReportPage() {
   const [latitude, setLatitude] = useState<number>(37.9577);
   const [longitude, setLongitude] = useState<number>(-121.2908);
   const [srNumber, setSrNumber] = useState<string | null>(null);
+  const [sentTo311, setSentTo311] = useState(false);
+  const [outsideMessage, setOutsideMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleFileSelect = useCallback((file: File, base64: string) => {
     setPreview(base64);
@@ -76,6 +80,11 @@ export default function ReportPage() {
   };
 
   const handleSubmitTo311 = async () => {
+    if (!turnstileToken) {
+      setSubmitError("Please complete the verification below.");
+      return;
+    }
+
     setSubmitError(null);
     setSubmitting(true);
     try {
@@ -90,17 +99,23 @@ export default function ReportPage() {
           latitude,
           longitude,
           imageBase64: imageUrl,
+          turnstileToken,
+          issueType,
+          severity,
+          department: getDepartment(issueType),
         }),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setSubmitError(`Submission failed: ${body.error ?? "Unknown error"}`);
+        setSubmitError(body.error ?? "Submission failed");
         return;
       }
 
       const result = await res.json();
       setSrNumber(result.SRNumber ?? null);
+      setSentTo311(result.sentTo311 === true);
+      setOutsideMessage(result.sentTo311 ? null : result.message ?? null);
       setStep("success");
     } catch (err) {
       setSubmitError(`Network error: ${err instanceof Error ? err.message : String(err)}`);
@@ -117,8 +132,11 @@ export default function ReportPage() {
     setSeverity("MEDIUM");
     setDescription("");
     setSrNumber(null);
+    setSentTo311(false);
+    setOutsideMessage(null);
     setSubmitError(null);
     setSubmitting(false);
+    setTurnstileToken(null);
   };
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
@@ -290,20 +308,30 @@ export default function ReportPage() {
             </div>
           </div>
 
+          {/* Turnstile Captcha */}
+          <div className="flex justify-center mb-4">
+            <Turnstile
+              sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA"}
+              onSuccess={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken(null)}
+              theme="light"
+            />
+          </div>
+
           {submitError && (
             <p className="text-sm text-red-600 mb-4">{submitError}</p>
           )}
 
           <div className="flex gap-3">
             <button
-              onClick={() => setStep("review")}
+              onClick={() => { setStep("review"); setTurnstileToken(null); }}
               className="flex-1 py-3 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
             >
               Go Back
             </button>
             <button
               onClick={handleSubmitTo311}
-              disabled={submitting}
+              disabled={submitting || !turnstileToken}
               className="flex-1 py-3 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
             >
               {submitting ? "Submitting..." : "Report Issue"}
@@ -319,15 +347,24 @@ export default function ReportPage() {
             &#x2705;
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Report Submitted!</h1>
-          <p className="text-gray-500 text-sm">
-            Your report has been submitted to{" "}
-            <span className="font-medium text-gray-900">San Joaquin County 311</span>.
-          </p>
+
+          {sentTo311 ? (
+            <p className="text-gray-500 text-sm">
+              Your report has been submitted to{" "}
+              <span className="font-medium text-gray-900">San Joaquin County 311</span>.
+            </p>
+          ) : (
+            <p className="text-gray-500 text-sm">
+              {outsideMessage ?? "Your report has been saved."}
+            </p>
+          )}
+
           {srNumber && (
             <p className="text-xs text-gray-400 font-mono bg-gray-50 px-3 py-1 rounded">
               SR Number: {srNumber}
             </p>
           )}
+
           <div className="flex flex-col sm:flex-row gap-3 mt-4 w-full">
             <Link
               href="/map"
