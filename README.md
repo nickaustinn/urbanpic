@@ -1,23 +1,23 @@
 # UrbanPic
 
-**Snap a photo. AI does the rest.**
+**Snap a photo. Report it. Done.**
 
-UrbanPic makes reporting city issues effortless. Take a photo of a pothole, graffiti, broken streetlight, or illegal dumping — Claude Vision instantly classifies it, writes the 311 report, and routes it to the right city department. Every report appears on a live community heat map so neighbors can see what's being addressed.
+UrbanPic makes reporting city issues effortless. Take a photo of a pothole, graffiti, broken streetlight, or illegal dumping — fill in the details, preview your 311 report, and submit it directly to San Joaquin County's NEXGEN 311 system. Every report appears on a live community heat map so neighbors can see what's being addressed.
 
 ## How It Works
 
 1. **Snap a photo** of any civic issue
-2. **AI classifies it** — issue type, severity, and a professional report description, generated in seconds
-3. **Review and submit** — edit if needed, confirm your location, and send
-4. **It's routed automatically** to the correct city department
-5. **See it on the map** — your report joins the community heat map instantly
+2. **Fill in the details** — select the issue type, severity, and describe what you see
+3. **Preview your 311 report** — see exactly what will be submitted to the county
+4. **Submit** — your report is sent directly to San Joaquin County 311
+5. **See it on the map** — your report joins the community heat map
 
 ## Features
 
-- **AI-powered classification** — Claude Vision identifies the issue type and severity from your photo
-- **Auto-generated 311 descriptions** — professional report copy written by AI, ready to submit
+- **Direct 311 integration** — reports are submitted to San Joaquin County's NEXGEN 311 system
 - **Smart department routing** — Public Works, Sanitation, Transportation, and more — no guessing
-- **Community heat map** — see all reports across the city, filterable by issue type
+- **Community heat map** — see all reports across the county, filterable by issue type
+- **Spam protection** — Cloudflare Turnstile captcha, rate limiting, and geofencing
 - **Fast** — go from photo to submitted report in under 30 seconds
 
 ## Built With
@@ -25,10 +25,10 @@ UrbanPic makes reporting city issues effortless. Take a photo of a pothole, graf
 | | |
 |---|---|
 | Frontend | Next.js, Tailwind CSS |
-| AI | Claude Vision (Anthropic) |
 | Maps | Mapbox GL JS |
 | Database | PostgreSQL + Prisma |
 | Deploy | Vercel + Supabase |
+| 311 Integration | San Joaquin County NEXGEN 311 API |
 
 ## Team
 
