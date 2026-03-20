@@ -5,7 +5,7 @@ import PhotoUpload from "@/components/PhotoUpload";
 import DepartmentBadge from "@/components/DepartmentBadge";
 import Link from "next/link";
 import { getDepartment } from "@/lib/routing";
-import { IssueType } from "@prisma/client";
+import { IssueType } from "@/lib/types";
 
 type Step = "upload" | "review" | "success";
 

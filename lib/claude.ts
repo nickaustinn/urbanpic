@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { IssueType, Severity } from "@prisma/client";
+import { IssueType, Severity } from "@/lib/types";
 import { getDepartment } from "./routing";
 
 const client = new Anthropic();

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -17,48 +17,25 @@ model User {
 }
 
 model Report {
-  id          String       @id @default(uuid())
+  id          String   @id @default(uuid())
   userId      String?
-  user        User?        @relation(fields: [userId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
   imageUrl    String
-  issueType   IssueType
-  severity    Severity     @default(MEDIUM)
+  issueType   String
+  severity    String   @default("MEDIUM")
   description String
   department  String
   latitude    Float
   longitude   Float
   address     String?
-  status      ReportStatus @default(PENDING)
-  aiRaw       Json?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  status      String   @default("PENDING")
+  aiRaw       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([issueType])
   @@index([status])
   @@index([userId])
   @@index([latitude, longitude])
   @@index([createdAt])
-}
-
-enum IssueType {
-  POTHOLE
-  GRAFFITI
-  BROKEN_STREETLIGHT
-  ILLEGAL_DUMPING
-  ABANDONED_VEHICLE
-  DAMAGED_SIDEWALK
-  FLOODING
-  OTHER
-}
-
-enum Severity {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum ReportStatus {
-  PENDING
-  IN_PROGRESS
-  RESOLVED
 }

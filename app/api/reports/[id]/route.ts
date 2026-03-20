@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { ReportStatus } from "@prisma/client";
+import { ReportStatus } from "@/lib/types";
 
 const VALID_STATUSES = new Set<string>(["PENDING", "IN_PROGRESS", "RESOLVED"]);
 

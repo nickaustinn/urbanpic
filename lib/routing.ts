@@ -1,4 +1,4 @@
-import { IssueType } from "@prisma/client";
+import { IssueType } from "@/lib/types";
 
 const DEPARTMENT_MAP: Record<IssueType, string> = {
   POTHOLE: "Department of Public Works",

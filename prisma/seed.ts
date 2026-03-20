@@ -1,4 +1,8 @@
-import { PrismaClient, IssueType, Severity, ReportStatus } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+
+type IssueType = "POTHOLE" | "GRAFFITI" | "BROKEN_STREETLIGHT" | "ILLEGAL_DUMPING" | "ABANDONED_VEHICLE" | "DAMAGED_SIDEWALK" | "FLOODING" | "OTHER";
+type Severity = "LOW" | "MEDIUM" | "HIGH";
+type ReportStatus = "PENDING" | "IN_PROGRESS" | "RESOLVED";
 
 const prisma = new PrismaClient();
 
