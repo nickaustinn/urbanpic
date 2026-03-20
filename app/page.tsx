@@ -8,10 +8,10 @@ const features = [
       "Upload or take a photo of any city issue — potholes, graffiti, broken streetlights, illegal dumping, and more.",
   },
   {
-    icon: "🤖",
-    title: "AI Does the Work",
+    icon: "📝",
+    title: "Quick & Easy",
     description:
-      "Claude Vision instantly classifies the issue, assesses severity, and writes a professional 311 report description.",
+      "Select the issue type, set the severity, and add a description — your report is ready to submit in seconds.",
   },
   {
     icon: "🗺️",
@@ -27,14 +27,14 @@ export default function HomePage() {
       {/* Hero */}
       <section className="flex flex-col items-center justify-center text-center px-6 py-24 bg-gradient-to-b from-brand-50 to-white">
         <span className="inline-block bg-brand-100 text-brand-700 text-sm font-medium px-3 py-1 rounded-full mb-6">
-          AI-Powered Civic Reporting
+          Community Civic Reporting
         </span>
         <h1 className="text-5xl font-bold tracking-tight text-gray-900 max-w-2xl leading-tight">
           Report city issues in under 30 seconds
         </h1>
         <p className="mt-6 text-xl text-gray-500 max-w-xl">
-          Snap a photo. UrbanPic handles the rest — classification, report
-          writing, and routing to the right city department.
+          Snap a photo, fill in the details, and UrbanPic routes your report
+          to the right city department.
         </p>
         <div className="mt-10 flex flex-col sm:flex-row gap-4">
           <Link
