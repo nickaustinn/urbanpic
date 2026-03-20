@@ -76,25 +76,26 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // TODO: Re-enable when ready to send real 311 reports
     // Only submit to SJC 311 if within San Joaquin County
-    if (inCounty) {
-      const result = await submitToSJC311(
-        {
-          srTypeId,
-          description: description ?? "",
-          latitude,
-          longitude,
-          address: address ?? "",
-          isAnonymous: true,
-        },
-        imageBase64 ?? null
-      );
-
-      return NextResponse.json(
-        { ...result, reportId: report.id, sentTo311: true },
-        { status: 201 }
-      );
-    }
+    // if (inCounty) {
+    //   const result = await submitToSJC311(
+    //     {
+    //       srTypeId,
+    //       description: description ?? "",
+    //       latitude,
+    //       longitude,
+    //       address: address ?? "",
+    //       isAnonymous: true,
+    //     },
+    //     imageBase64 ?? null
+    //   );
+    //
+    //   return NextResponse.json(
+    //     { ...result, reportId: report.id, sentTo311: true },
+    //     { status: 201 }
+    //   );
+    // }
 
     // Outside SJC - save locally only
     return NextResponse.json(
